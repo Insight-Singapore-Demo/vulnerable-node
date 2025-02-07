@@ -1,10 +1,17 @@
 var log4js = require("log4js");
 var url = require("url");
 var express = require('express');
+var RateLimit = require('express-rate-limit');
 var auth = require("../model/auth");
 var router = express.Router();
 
 var logger = log4js.getLogger('vnode')
+
+// Configure rate limiter: maximum of 5 requests per minute
+var authLimiter = RateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 5 // limit each IP to 5 requests per windowMs
+});
 
 // Login template
 router.get('/login', function(req, res, next) {
@@ -16,7 +23,7 @@ router.get('/login', function(req, res, next) {
 
 
 // Do auth
-router.post('/login/auth', function(req, res) {
+router.post('/login/auth', authLimiter, function(req, res) {
 
     var user = req.body.username;
     var password = req.body.password;
